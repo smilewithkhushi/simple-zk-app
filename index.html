@@ -316,23 +316,21 @@
     <section class="grid">
       <div class="panel circuit-box">
         <h2 class="panel-title">Circuit</h2>
-        <pre><span class="kw">fn</span> <span class="fn">main</span>(x: Field, y: <span class="pub">pub</span> Field) {
-    assert(x == y);
-}</pre>
+        <pre><span class="kw">fn</span> <span class="fn">main</span>(lat: Field, lon: Field, <span class="pub">north</span>: Field, <span class="pub">west</span>: Field, <span class="pub">south</span>: Field, <span class="pub">east</span>: Field) {
+      assert(lat &gt;= south);
+      assert(lat &lt;= north);
+      assert(lon &gt;= west);
+      assert(lon &lt;= east);
+    }</pre>
       </div>
 
       <div class="panel">
-        <h2 class="panel-title">Prove Equality</h2>
+        <h2 class="panel-title">Geographical Location Verification</h2>
         <form id="proofForm">
           <div class="field">
-            <label>x <span class="badge-private">private</span></label>
-            <input type="text" id="x" placeholder="e.g. 42" autocomplete="off" required />
-            <span class="hint">Known only to you, never revealed in the proof.</span>
-          </div>
-          <div class="field">
-            <label>y <span class="badge-public">public</span></label>
-            <input type="text" id="y" placeholder="e.g. 42" autocomplete="off" required />
-            <span class="hint">Public value that must match x.</span>
+            <label>Your Location <span class="badge-private">private</span></label>
+            <input type="text" id="userLocation" readonly placeholder="Detecting from browser..." />
+            <span class="hint">Your latitude/longitude will be used privately for the proof. The bounding box is fixed to India.</span>
           </div>
           <button type="submit" id="btn">Generate and Verify Proof</button>
         </form>
@@ -348,10 +346,41 @@
     const btn  = document.getElementById("btn");
     const out  = document.getElementById("result");
 
+
+    // Geolocation logic
+    let userLat = null, userLon = null;
+    const userLocationInput = document.getElementById("userLocation");
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          userLat = pos.coords.latitude;
+          userLon = pos.coords.longitude;
+          userLocationInput.value = `${userLat.toFixed(6)}, ${userLon.toFixed(6)}`;
+        },
+        (err) => {
+          userLocationInput.value = "Unable to get location";
+        }
+      );
+    } else {
+      userLocationInput.value = "Geolocation not supported";
+    }
+
+    // India bounding box (approximate):
+    // North: 37.1, West: 68.1, South: 6.5, East: 97.4
+    const INDIA_BOUNDS = {
+      north: 37.1,
+      west: 68.1,
+      south: 6.5,
+      east: 97.4
+    };
+
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const x = document.getElementById("x").value.trim();
-      const y = document.getElementById("y").value.trim();
+
+      if (userLat === null || userLon === null) {
+        out.innerHTML = `<div class=\"verdict failure\">Could not get your location from browser.</div>`;
+        return;
+      }
 
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner"></span>Running proof...';
@@ -361,15 +390,22 @@
         const res = await fetch("/prove", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ x, y }),
+          body: JSON.stringify({
+            lat: userLat,
+            lon: userLon,
+            north: INDIA_BOUNDS.north,
+            west: INDIA_BOUNDS.west,
+            south: INDIA_BOUNDS.south,
+            east: INDIA_BOUNDS.east
+          }),
         });
         const data = await res.json();
         renderResult(data);
       } catch (err) {
-        out.innerHTML = `<div class="verdict failure">Server error: ${err.message}</div>`;
+        out.innerHTML = `<div class=\"verdict failure\">Server error: ${err.message}</div>`;
       } finally {
         btn.disabled = false;
-        btn.textContent = "Generate & Verify Proof";
+        btn.textContent = "Generate and Verify Proof";
       }
     });
 
@@ -383,9 +419,10 @@
         </div>
       `).join("");
 
+
       const verdictHtml = data.success
-        ? `<div class="verdict success">✓ &nbsp; Proof valid — x equals y without revealing x</div>`
-        : `<div class="verdict failure">✗ &nbsp; Proof failed — constraint not satisfied</div>`;
+        ? `<div class="verdict success">✓ &nbsp; Proof valid — your location is within the bounding box</div>`
+        : `<div class="verdict failure">✗ &nbsp; Proof failed — your location is outside the bounding box</div>`;
 
       out.innerHTML = `<div class="steps">${stepsHtml}</div>${verdictHtml}`;
     }
