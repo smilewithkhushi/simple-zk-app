@@ -1,5 +1,5 @@
 [package]
-name = "simple_circuit"
+name = "loan_eligibility_circuit"
 type = "bin"
  #bin means binary
 
