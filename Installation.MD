@@ -428,24 +428,28 @@ compiler_version = "0.21.0"
 
 ### Main Circuit File (src/main.nr)
 
-**Default Boilerplate**:
+**Gaming/Tournament Eligibility Example**:
 
 ```noir
-fn main(x : Field, y : Field) {
-    assert(x == y);
+// Prove you meet tournament requirements without revealing exact stats
+fn main(player_points: Field, min_points: pub Field, level: Field, min_level: pub Field) {
+    assert(player_points >= min_points);
+    assert(level >= min_level);
 }
 
 #[test]
-fn test_example() {
-    main(1, 1);
+fn test_eligible() {
+    main(1500, 1000, 5, 3); // Eligible: has 1500 pts (needs 1000) and level 5 (needs 3)
 }
 ```
 
 ### Prover Template (Prover.toml)
 
 ```toml
-x = "1"
-y = "2"
+player_points = "1500"
+min_points = "1000"
+level = "5"
+min_level = "3"
 ```
 
 ---

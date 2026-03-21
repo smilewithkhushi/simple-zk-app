@@ -309,38 +309,49 @@
 
   <main class="app">
     <header class="hero">
-      <h1><span class="tag">Circuit Check</span> Zero-Knowledge Proof Playground</h1>
-      <p>Noir + Barretenberg · simple_circuit</p>
+      <h1><span class="tag">🎮 Tournament</span> Gaming Eligibility Proof</h1>
+      <p>Prove your tournament eligibility without revealing exact stats · Noir ZK</p>
     </header>
 
     <section class="grid">
       <div class="panel circuit-box">
         <h2 class="panel-title">Circuit</h2>
-        <pre><span class="kw">fn</span> <span class="fn">main</span>(x: Field, y: <span class="pub">pub</span> Field) {
-    assert(x == y);
+        <pre><span class="kw">fn</span> <span class="fn">main</span>(player_points: Field, min_points: <span class="pub">pub</span> Field, level: Field, min_level: <span class="pub">pub</span> Field) {
+    assert(player_points >= min_points);
+    assert(level >= min_level);
 }</pre>
       </div>
 
       <div class="panel">
-        <h2 class="panel-title">Prove Equality</h2>
+        <h2 class="panel-title">Tournament Eligibility Check</h2>
         <form id="proofForm">
           <div class="field">
-            <label>x <span class="badge-private">private</span></label>
-            <input type="text" id="x" placeholder="e.g. 42" autocomplete="off" required />
-            <span class="hint">Known only to you, never revealed in the proof.</span>
+            <label>Player Points <span class="badge-private">private</span></label>
+            <input type="text" id="playerPoints" placeholder="e.g. 1500" autocomplete="off" required />
+            <span class="hint">Your current points (not revealed in proof)</span>
           </div>
           <div class="field">
-            <label>y <span class="badge-public">public</span></label>
-            <input type="text" id="y" placeholder="e.g. 42" autocomplete="off" required />
-            <span class="hint">Public value that must match x.</span>
+            <label>Min Points Required <span class="badge-public">public</span></label>
+            <input type="text" id="minPoints" placeholder="e.g. 1000" autocomplete="off" required />
+            <span class="hint">Tournament minimum points requirement</span>
           </div>
-          <button type="submit" id="btn">Generate and Verify Proof</button>
+          <div class="field">
+            <label>Player Level <span class="badge-private">private</span></label>
+            <input type="text" id="level" placeholder="e.g. 5" autocomplete="off" required />
+            <span class="hint">Your current level (not revealed in proof)</span>
+          </div>
+          <div class="field">
+            <label>Min Level Required <span class="badge-public">public</span></label>
+            <input type="text" id="minLevel" placeholder="e.g. 3" autocomplete="off" required />
+            <span class="hint">Tournament minimum level requirement</span>
+          </div>
+          <button type="submit" id="btn">Generate Tournament Proof</button>
         </form>
         <div id="result"></div>
       </div>
     </section>
 
-    <footer>simple-circuit · khushii · Noir ZK</footer>
+    <footer>gaming-circuit · tournament-eligibility · Noir ZK</footer>
   </main>
 
   <script>
@@ -350,18 +361,20 @@
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const x = document.getElementById("x").value.trim();
-      const y = document.getElementById("y").value.trim();
+      const playerPoints = document.getElementById("playerPoints").value.trim();
+      const minPoints = document.getElementById("minPoints").value.trim();
+      const level = document.getElementById("level").value.trim();
+      const minLevel = document.getElementById("minLevel").value.trim();
 
       btn.disabled = true;
-      btn.innerHTML = '<span class="spinner"></span>Running proof...';
+      btn.innerHTML = '<span class="spinner"></span>Generating proof...';
       out.innerHTML = "";
 
       try {
         const res = await fetch("/prove", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ x, y }),
+          body: JSON.stringify({ playerPoints, minPoints, level, minLevel }),
         });
         const data = await res.json();
         renderResult(data);
@@ -369,7 +382,7 @@
         out.innerHTML = `<div class="verdict failure">Server error: ${err.message}</div>`;
       } finally {
         btn.disabled = false;
-        btn.textContent = "Generate & Verify Proof";
+        btn.textContent = "Generate Tournament Proof";
       }
     });
 
@@ -384,8 +397,8 @@
       `).join("");
 
       const verdictHtml = data.success
-        ? `<div class="verdict success">✓ &nbsp; Proof valid — x equals y without revealing x</div>`
-        : `<div class="verdict failure">✗ &nbsp; Proof failed — constraint not satisfied</div>`;
+        ? `<div class="verdict success">✓ &nbsp; You are eligible for the tournament!</div>`
+        : `<div class="verdict failure">✗ &nbsp; Eligibility requirement not met</div>`;
 
       out.innerHTML = `<div class="steps">${stepsHtml}</div>${verdictHtml}`;
     }

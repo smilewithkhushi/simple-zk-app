@@ -1,52 +1,58 @@
-# Simple Circuit: Your First Zero Knowledge Proof Project
+# Gaming Tournament Eligibility: A Zero Knowledge Proof Project
 
-This is your first project using **Noir** for generating zero knowledge proofs! 
+Prove you're eligible for a gaming tournament without revealing your exact points or level! 
 
 ---
 
 ## 📋 Project Overview
 
-This project demonstrates a complete workflow for building, compiling, and verifying zero knowledge circuits using Noir. It serves as both a learning resource and a practical example for beginners.
+This project demonstrates a complete **real-world gaming use case** for zero knowledge proofs using Noir. Players can prove they meet tournament requirements (points threshold + level requirement) without exposing their exact stats to the tournament operator.
 
 ### Key Technologies
 - **Language**: Noir (`.nr` file extension)
 - **Proving Backend**: Barretenberg
 - **Proving Scheme**: ultra_honk
 - **Project Type**: Binary crate
+- **Use Case**: Gaming/Tournament Eligibility Verification
 - **Creator**: Aztec Network
 
 ---
 
-## 🎯 Your First Simple Circuit
+## 🎮 Tournament Eligibility Circuit
 
-### Basic Circuit Example
+### Circuit Overview
 
 ```noir
-fn main(x: Field, y: pub Field) {
-    assert(x != y);
-}
-
-#[test]
-fn test_circuit() {
-    main(1, 2);
+fn main(player_points: Field, min_points: pub Field, level: Field, min_level: pub Field) {
+    assert(player_points >= min_points);
+    assert(level >= min_level);
 }
 ```
 
-This circuit proves that you know a **private value** (`x`) that is **not equal** to a **public value** (`y`), without revealing `x`.
+This circuit proves that you meet **both** tournament requirements without revealing your actual stats:
 
 ### How It Works
 
-1. **Private Input `x`**: Only known to the prover
-2. **Public Input `y`**: Known to both prover and verifier
-3. **Assertion**: `assert(x != y)` creates a constraint
-4. **Proof**: Generates a zero knowledge proof that the constraint is satisfied
+1. **Private Inputs**:
+   - `player_points`: Your current points (kept secret)
+   - `level`: Your current level (kept secret)
+
+2. **Public Inputs** (tournament parameters):
+   - `min_points`: Minimum points required (e.g., 1000)
+   - `min_level`: Minimum level required (e.g., 3)
+
+3. **Constraints**: 
+   - Your points must be ≥ minimum points required
+   - Your level must be ≥ minimum level required
+
+4. **Result**: A zero knowledge proof that you're eligible without revealing exact stats
 
 ---
 
 ## 📁 Repository Structure
 
 ```
-simple_circuit/
+gaming-circuit/
 ├── README.MD                      # This file - Project overview
 ├── Basics.MD                      # Detailed guide to Noir basics & concepts
 ├── NOIR_GUIDE.md                  # Complete guide to Noir language
