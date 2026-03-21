@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Simple Circuit — ZK Proof Demo</title>
+  <title>zkVote | Secure Zero-Knowledge Age Verification</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
@@ -20,7 +21,11 @@
       --danger: #ff7f72;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     body {
       min-height: 100vh;
@@ -48,8 +53,16 @@
       z-index: 0;
     }
 
-    body::before { top: -84px; left: -74px; }
-    body::after  { right: -72px; bottom: -92px; border-color: rgba(244, 162, 89, 0.2); }
+    body::before {
+      top: -84px;
+      left: -74px;
+    }
+
+    body::after {
+      right: -72px;
+      bottom: -92px;
+      border-color: rgba(244, 162, 89, 0.2);
+    }
 
     .app {
       width: 100%;
@@ -118,10 +131,21 @@
       font-family: 'IBM Plex Mono', monospace;
     }
 
-    .circuit-box pre .kw  { color: #7fd6f3; }
-    .circuit-box pre .fn  { color: #ffc178; }
-    .circuit-box pre .pub { color: #a8f0d1; }
-    .circuit-box pre .str { color: #ff9790; }
+    .circuit-box pre .kw {
+      color: #7fd6f3;
+    }
+
+    .circuit-box pre .fn {
+      color: #ffc178;
+    }
+
+    .circuit-box pre .pub {
+      color: #a8f0d1;
+    }
+
+    .circuit-box pre .str {
+      color: #ff9790;
+    }
 
     #proofForm {
       display: flex;
@@ -152,8 +176,15 @@
       letter-spacing: 0.11em;
     }
 
-    .badge-private { background: rgba(90, 210, 244, 0.13); color: #8ee5ff; }
-    .badge-public  { background: rgba(244, 162, 89, 0.15); color: #ffc58f; }
+    .badge-private {
+      background: rgba(90, 210, 244, 0.13);
+      color: #8ee5ff;
+    }
+
+    .badge-public {
+      background: rgba(244, 162, 89, 0.15);
+      color: #ffc58f;
+    }
 
     .field input {
       border: 1px solid rgba(141, 201, 219, 0.3);
@@ -227,9 +258,18 @@
       padding: 10px 12px;
     }
 
-    .step.ok { border-color: rgba(79, 231, 168, 0.42); }
-    .step.fail { border-color: rgba(255, 127, 114, 0.45); }
-    .step-icon { font-size: 1rem; text-align: center; }
+    .step.ok {
+      border-color: rgba(79, 231, 168, 0.42);
+    }
+
+    .step.fail {
+      border-color: rgba(255, 127, 114, 0.45);
+    }
+
+    .step-icon {
+      font-size: 1rem;
+      text-align: center;
+    }
 
     .step-name {
       color: #d7f6ff;
@@ -287,10 +327,22 @@
       text-transform: uppercase;
     }
 
-    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
     @keyframes reveal {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     @media (min-width: 900px) {
@@ -305,71 +357,76 @@
     }
   </style>
 </head>
+
 <body>
 
   <main class="app">
     <header class="hero">
-      <h1><span class="tag">Circuit Check</span> Zero-Knowledge Proof Playground</h1>
-      <p>Noir + Barretenberg · simple_circuit</p>
+      <h1><span class="tag">zkVote</span> Secure Zero-Knowledge Age Verification</h1>
+      <p>Noir + Barretenberg · Privacy-Preserving Voting</p>
     </header>
 
     <section class="grid">
       <div class="panel circuit-box">
         <h2 class="panel-title">Circuit</h2>
-        <pre><span class="kw">fn</span> <span class="fn">main</span>(x: Field, y: <span class="pub">pub</span> Field) {
-    assert(x == y);
+        <pre><span class="kw">fn</span> <span class="fn">main</span>(age: u32, vote: <span class="pub">pub</span> Field) {
+    assert(age >= 18);
+    // The vote is recorded publicly!
 }</pre>
       </div>
 
       <div class="panel">
-        <h2 class="panel-title">Prove Equality</h2>
+        <h2 class="panel-title">Cast Your Vote</h2>
         <form id="proofForm">
           <div class="field">
-            <label>x <span class="badge-private">private</span></label>
-            <input type="text" id="x" placeholder="e.g. 42" autocomplete="off" required />
-            <span class="hint">Known only to you, never revealed in the proof.</span>
+            <label>Age <span class="badge-private">private</span></label>
+            <input type="number" id="age" placeholder="e.g. 25" autocomplete="off" required />
+            <span class="hint">Must be 18+. Known only to you, never revealed in the proof.</span>
           </div>
           <div class="field">
-            <label>y <span class="badge-public">public</span></label>
-            <input type="text" id="y" placeholder="e.g. 42" autocomplete="off" required />
-            <span class="hint">Public value that must match x.</span>
+            <label>Vote Choice <span class="badge-public">public</span></label>
+            <input type="text" id="vote" placeholder="e.g. 1" autocomplete="off" required />
+            <span class="hint">The candidate ID you are voting for.</span>
           </div>
-          <button type="submit" id="btn">Generate and Verify Proof</button>
+          <button type="submit" id="btn">Cast Vote Securely</button>
         </form>
         <div id="result"></div>
       </div>
     </section>
 
-    <footer>simple-circuit · khushii · Noir ZK</footer>
+    <footer>simple-circuit · Varshith-code · Noir ZK</footer>
   </main>
 
   <script>
     const form = document.getElementById("proofForm");
-    const btn  = document.getElementById("btn");
-    const out  = document.getElementById("result");
+    const btn = document.getElementById("btn");
+    const out = document.getElementById("result");
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const x = document.getElementById("x").value.trim();
-      const y = document.getElementById("y").value.trim();
+      const age = document.getElementById("age").value.trim();
+      const vote = document.getElementById("vote").value.trim();
 
       btn.disabled = true;
-      btn.innerHTML = '<span class="spinner"></span>Running proof...';
+      btn.innerHTML = '<span class="spinner"></span>Generating zk-proof...';
       out.innerHTML = "";
 
       try {
         const res = await fetch("/prove", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ x, y }),
+          body: JSON.stringify({ age, vote }),
         });
         const data = await res.json();
+        if (data.error) {
+          throw new Error(data.error);
+        }
         renderResult(data);
       } catch (err) {
         out.innerHTML = `<div class="verdict failure">Server error: ${err.message}</div>`;
       } finally {
         btn.disabled = false;
-        btn.textContent = "Generate & Verify Proof";
+        btn.textContent = "Cast Vote Securely";
       }
     });
 
@@ -384,12 +441,13 @@
       `).join("");
 
       const verdictHtml = data.success
-        ? `<div class="verdict success">✓ &nbsp; Proof valid — x equals y without revealing x</div>`
-        : `<div class="verdict failure">✗ &nbsp; Proof failed — constraint not satisfied</div>`;
+        ? `<div class="verdict success">✓ &nbsp; Proof valid — Voter is 18+ and vote cast successfully!</div>`
+        : `<div class="verdict failure">✗ &nbsp; Proof failed — You must be 18 or older to vote.</div>`;
 
       out.innerHTML = `<div class="steps">${stepsHtml}</div>${verdictHtml}`;
     }
   </script>
 
 </body>
+
 </html>

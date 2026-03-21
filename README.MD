@@ -196,7 +196,7 @@ node server.js
 [package]
 name = "simple_circuit"
 type = "bin"
-authors = ["Your Name"]
+authors = ["Varshith-code"]
 compiler_version = "0.21.0"
 ```
 

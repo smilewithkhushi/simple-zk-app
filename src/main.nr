@@ -1,12 +1,9 @@
-//all files to be included here only
-fn main(x: Field, y: pub Field) {
-    assert(x == y);
+fn main(age: u32, vote: pub Field) {
+    assert(age >= 18);
+    // The vote is recorded publicly, but the exact age is hidden!
 }
 
 #[test]
 fn test_main() {
-    main(1, 2);
-
-    // Uncomment to make test fail
-    // main(1, 1);
+    main(25, 1);
 }
