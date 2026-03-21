@@ -188,4 +188,19 @@ The circuit has no inline documentation, and the README does not explain the cry
 
 ---
 
+## Real-World Use Case Ideas
+
+Feeling creative? Try building a circuit around one of these:
+
+- **Lottery** — prove your private ticket matches the winning number without revealing it to others
+- **Age Verification** — prove `age >= 18` for voting/KYC without disclosing the actual birth date
+- **Password Login** — prove knowledge of a secret hash without ever sending the raw password to the server
+- **Balance Sufficiency** — prove a wallet holds enough funds for a transaction without revealing the total balance
+- **NFT Allowlist** — prove a wallet address is on a whitelist without storing all addresses on-chain
+- **Exam Score Gate** — prove a score is above the passing threshold without revealing the exact mark
+- **Coupon Redemption** — prove you hold a valid coupon code without exposing it (prevents replay attacks)
+- **Private Voting** — prove you are a registered voter AND of voting age, without linking your identity to your ballot
+
+---
+
 *Challenges created for the Simple Circuit ZK boilerplate — built with Noir and Barretenberg.*
