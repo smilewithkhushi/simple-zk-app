@@ -1,2 +1,3 @@
-x = "3"
-y = "7"
+total_loans = "120"
+overdue_loans = "3"
+max_overdue_allowed = "5"
