@@ -418,7 +418,7 @@ my_first_circuit/
 [package]
 name = "my_first_circuit"
 type = "bin"
-authors = ["Your Name"]
+authors = ["Varshith-code"]
 compiler_version = "0.21.0"
 
 [dependencies]
