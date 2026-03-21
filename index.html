@@ -316,25 +316,52 @@
     <section class="grid">
       <div class="panel circuit-box">
         <h2 class="panel-title">Circuit</h2>
-        <pre><span class="kw">fn</span> <span class="fn">main</span>(x: Field, y: <span class="pub">pub</span> Field) {
-    assert(x == y);
+        <pre><span class="kw">use</span> dep::std;
+
+<span class="kw">fn</span> <span class="fn">main</span>(
+    identity_secret: Field, 
+    merkle_index: Field, 
+    hash_path: [Field; 3], 
+    root: <span class="pub">pub</span> Field
+) {
+    <span class="kw">let</span> my_leaf = std::hash::pedersen_hash([identity_secret]);
+    <span class="kw">let</span> root = std::merkle::compute_merkle_root(my_leaf, merkle_index, hash_path);
+    assert(root == root);
 }</pre>
+        <div style="margin-top: 20px; font-size: 0.85rem; color: var(--muted); line-height: 1.5;">
+          <p><strong>Advanced Use Case: Anonymous Whitelist</strong></p>
+          <p>This proves you are a VIP member in a list of 8 people without revealing which one you are.</p>
+        </div>
       </div>
 
       <div class="panel">
-        <h2 class="panel-title">Prove Equality</h2>
+        <h2 class="panel-title">Membership Proof</h2>
         <form id="proofForm">
           <div class="field">
-            <label>x <span class="badge-private">private</span></label>
-            <input type="text" id="x" placeholder="e.g. 42" autocomplete="off" required />
-            <span class="hint">Known only to you, never revealed in the proof.</span>
+            <label>Identity Secret <span class="badge-private">private</span></label>
+            <input type="text" id="secret" placeholder="e.g. 123456" required />
+            <span class="hint">Your private key (never revealed).</span>
           </div>
           <div class="field">
-            <label>y <span class="badge-public">public</span></label>
-            <input type="text" id="y" placeholder="e.g. 42" autocomplete="off" required />
-            <span class="hint">Public value that must match x.</span>
+            <label>Merkle Index <span class="badge-private">private</span></label>
+            <input type="text" id="index" placeholder="e.g. 0" required />
+            <span class="hint">Your position in the tree (0 to 7).</span>
           </div>
-          <button type="submit" id="btn">Generate and Verify Proof</button>
+          <div class="field">
+            <label>Hash Path <span class="badge-private">private</span></label>
+            <input type="text" id="path" placeholder="p1, p2, p3" required />
+            <span class="hint">3 neighbor hashes separated by commas.</span>
+          </div>
+          <div class="field">
+            <label>Merkle Root <span class="badge-public">public</span></label>
+            <input type="text" id="root" placeholder="0x..." required />
+            <span class="hint">The public fingerprint of the whole whitelist.</span>
+          </div>
+          <button type="submit" id="btn">Generate membership proof</button>
+          
+          <button type="button" id="testBtn" style="margin-top: 10px; background: rgba(255,255,255,0.05); color: var(--muted); border: 1px dashed var(--line); border-radius: 8px; padding: 8px; font-size: 0.8rem; cursor: pointer;">
+            Auto-fill with Example VIP Data
+          </button>
         </form>
         <div id="result"></div>
       </div>
@@ -347,11 +374,36 @@
     const form = document.getElementById("proofForm");
     const btn  = document.getElementById("btn");
     const out  = document.getElementById("result");
+    const testBtn = document.getElementById("testBtn");
+
+    // Pre-calculated working data for a simple Merkle Tree of height 3
+    const TEST_DATA = {
+      identity_secret: "123",
+      merkle_index: "0",
+      hash_path: [
+        "0x2767041dcdd670731fa55e5d3fa9664da044cc1835fac6890333d45c38b2510c",
+        "0x05481d9f95037d046f48f430c25a7aee4f6ac0c6dfec8f7004fcfefba5a3637e",
+        "0x117a0033ad11d6706e5797d341b126588d927f8045610813f56e9c685bf98275"
+      ],
+      root: "0x1d3680e60971578335b23b10b65d6bd94998781a704618e388fac68d270313f8"
+    };
+
+    testBtn.addEventListener("click", () => {
+      document.getElementById("secret").value = TEST_DATA.identity_secret;
+      document.getElementById("index").value = TEST_DATA.merkle_index;
+      document.getElementById("path").value = TEST_DATA.hash_path.join(", ");
+      document.getElementById("root").value = TEST_DATA.root;
+    });
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const x = document.getElementById("x").value.trim();
-      const y = document.getElementById("y").value.trim();
+      
+      const payload = {
+        identity_secret: document.getElementById("secret").value.trim(),
+        merkle_index: document.getElementById("index").value.trim(),
+        hash_path: document.getElementById("path").value.split(",").map(v => v.trim()),
+        root: document.getElementById("root").value.trim()
+      };
 
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner"></span>Running proof...';
@@ -361,7 +413,7 @@
         const res = await fetch("/prove", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ x, y }),
+          body: JSON.stringify(payload),
         });
         const data = await res.json();
         renderResult(data);
@@ -369,7 +421,7 @@
         out.innerHTML = `<div class="verdict failure">Server error: ${err.message}</div>`;
       } finally {
         btn.disabled = false;
-        btn.textContent = "Generate & Verify Proof";
+        btn.textContent = "Generate membership proof";
       }
     });
 
@@ -384,8 +436,8 @@
       `).join("");
 
       const verdictHtml = data.success
-        ? `<div class="verdict success">✓ &nbsp; Proof valid — x equals y without revealing x</div>`
-        : `<div class="verdict failure">✗ &nbsp; Proof failed — constraint not satisfied</div>`;
+        ? `<div class="verdict success">✓ &nbsp; Proof valid — Membership confirmed without revealing identity</div>`
+        : `<div class="verdict failure">✗ &nbsp; Proof failed — Invalid membership path or root</div>`;
 
       out.innerHTML = `<div class="steps">${stepsHtml}</div>${verdictHtml}`;
     }
