@@ -278,6 +278,26 @@
       margin-right: 8px;
     }
 
+    .use-cases {
+      margin-top: 18px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .case-item {
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(141, 201, 219, 0.2);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.85rem;
+      color: #d7f6ff;
+      line-height: 1.5;
+    }
+
+    .case-item.pass { border-color: rgba(79, 231, 168, 0.42); }
+    .case-item.fail { border-color: rgba(255, 127, 114, 0.45); }
+
     footer {
       margin-top: 20px;
       text-align: center;
@@ -316,28 +336,37 @@
     <section class="grid">
       <div class="panel circuit-box">
         <h2 class="panel-title">Circuit</h2>
-        <pre><span class="kw">fn</span> <span class="fn">main</span>(x: Field, y: <span class="pub">pub</span> Field) {
+        <pre><span class="kw">fn</span> <span class="fn">main</span>(x: u8, y: <span class="pub">pub</span> u8) {
     assert(x == y);
+    assert(y &lt;= 100);
 }</pre>
       </div>
 
       <div class="panel">
-        <h2 class="panel-title">Prove Equality</h2>
+        <h2 class="panel-title">Prove Equality + Range</h2>
         <form id="proofForm">
           <div class="field">
             <label>x <span class="badge-private">private</span></label>
-            <input type="text" id="x" placeholder="e.g. 42" autocomplete="off" required />
-            <span class="hint">Known only to you, never revealed in the proof.</span>
+            <input type="number" id="x" placeholder="e.g. 42" min="0" max="100" step="1" autocomplete="off" required />
+            <span class="hint">Known only to you, never revealed in the proof. Use an integer from 0 to 100.</span>
           </div>
           <div class="field">
             <label>y <span class="badge-public">public</span></label>
-            <input type="text" id="y" placeholder="e.g. 42" autocomplete="off" required />
-            <span class="hint">Public value that must match x.</span>
+            <input type="number" id="y" placeholder="e.g. 42" min="0" max="100" step="1" autocomplete="off" required />
+            <span class="hint">Public value that must match x and stay in the 0-100 range.</span>
           </div>
           <button type="submit" id="btn">Generate and Verify Proof</button>
         </form>
         <div id="result"></div>
       </div>
+    </section>
+
+    <section class="panel use-cases">
+      <h2 class="panel-title">Use Cases</h2>
+      <div class="case-item pass">PASS: x=42, y=42 -> equal and y in [0,100]</div>
+      <div class="case-item fail">FAIL: x=42, y=41 -> equality constraint fails</div>
+      <div class="case-item fail">FAIL: x=101, y=101 -> y out of allowed range</div>
+      <div class="case-item fail">FAIL: x=12, y=-1 -> y below 0 (invalid input)</div>
     </section>
 
     <footer>simple-circuit · khushii · Noir ZK</footer>
@@ -352,6 +381,12 @@
       e.preventDefault();
       const x = document.getElementById("x").value.trim();
       const y = document.getElementById("y").value.trim();
+      const yNum = Number(y);
+
+      if (!Number.isInteger(yNum) || yNum < 0 || yNum > 100) {
+        out.innerHTML = `<div class="verdict failure">Input error: y must be an integer between 0 and 100.</div>`;
+        return;
+      }
 
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner"></span>Running proof...';
@@ -384,7 +419,7 @@
       `).join("");
 
       const verdictHtml = data.success
-        ? `<div class="verdict success">✓ &nbsp; Proof valid — x equals y without revealing x</div>`
+        ? `<div class="verdict success">✓ &nbsp; Proof valid — x equals y and y is in range [0, 100]</div>`
         : `<div class="verdict failure">✗ &nbsp; Proof failed — constraint not satisfied</div>`;
 
       out.innerHTML = `<div class="steps">${stepsHtml}</div>${verdictHtml}`;
