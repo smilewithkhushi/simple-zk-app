@@ -6,13 +6,13 @@ const { execSync } = require("child_process");
 const PORT = 3000;
 const ROOT = __dirname;
 
-function updateProverToml(x, y) {
-  const content = `x = "${x}"\ny = "${y}"\n`;
+function updateProverToml(birth_year, current_year, min_age) {
+  const content = `birth_year = "${birth_year}"\ncurrent_year = "${current_year}"\nmin_age = "${min_age}"\n`;
   fs.writeFileSync(path.join(ROOT, "Prover.toml"), content);
 }
 
-function runProof(x, y) {
-  updateProverToml(x, y);
+function runProof(birth_year, current_year, min_age) {
+  updateProverToml(birth_year, current_year, min_age);
 
   const steps = [];
 
@@ -26,7 +26,7 @@ function runProof(x, y) {
 
   try {
     execSync(
-      "bb prove -b ./target/simple_circuit.json -w ./target/simple_circuit.gz -o ./target",
+      "bb prove -b ./target/age_verify.json -w ./target/age_verify.gz -o ./target",
       { cwd: ROOT, stdio: "pipe" }
     );
     steps.push({ name: "bb prove", status: "ok", msg: "Proof generated" });
@@ -57,20 +57,20 @@ const server = http.createServer((req, res) => {
     let body = "";
     req.on("data", (chunk) => (body += chunk));
     req.on("end", () => {
-      let x, y;
+      let birth_year, current_year, min_age;
       try {
-        ({ x, y } = JSON.parse(body));
+        ({ birth_year, current_year, min_age } = JSON.parse(body));
       } catch {
         res.writeHead(400, { "Content-Type": "application/json" });
         return res.end(JSON.stringify({ error: "Invalid JSON" }));
       }
 
-      if (!x || !y) {
+      if (!birth_year || !current_year || !min_age) {
         res.writeHead(400, { "Content-Type": "application/json" });
-        return res.end(JSON.stringify({ error: "x and y are required" }));
+        return res.end(JSON.stringify({ error: "birth_year, current_year, and min_age are required" }));
       }
 
-      const result = runProof(x, y);
+      const result = runProof(birth_year, current_year, min_age);
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify(result));
     });

@@ -1,12 +1,16 @@
-//all files to be included here only
-fn main(x: Field, y: pub Field) {
-    assert(x == y);
+fn main(birth_year: u32, current_year: pub u32, min_age: pub u32) {
+    assert(birth_year <= current_year);
+    assert(birth_year >= current_year - 150);
+    let age = current_year - birth_year;
+    assert(age >= min_age);
 }
 
 #[test]
-fn test_main() {
-    main(1, 2);
+fn test_valid_age() {
+    main(1990, 2026, 18);
+}
 
-    // Uncomment to make test fail
-    // main(1, 1);
+#[test]
+fn test_exact_threshold() {
+    main(2008, 2026, 18);
 }

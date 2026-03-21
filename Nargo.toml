@@ -1,5 +1,5 @@
 [package]
-name = "simple_circuit"
+name = "age_verify"
 type = "bin"
  #bin means binary
 

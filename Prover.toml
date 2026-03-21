@@ -1,2 +1,3 @@
-x = "3"
-y = "7"
+birth_year = "2000"
+current_year = "2026"
+min_age = "18"
