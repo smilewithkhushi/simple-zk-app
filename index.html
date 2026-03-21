@@ -316,25 +316,37 @@
     <section class="grid">
       <div class="panel circuit-box">
         <h2 class="panel-title">Circuit</h2>
-        <pre><span class="kw">fn</span> <span class="fn">main</span>(x: Field, y: <span class="pub">pub</span> Field) {
-    assert(x == y);
+        <pre><span class="kw">use</span> dep::std;
+
+<span class="kw">fn</span> <span class="fn">main</span>(
+    identity_secret: Field, 
+    merkle_index: Field, 
+    hash_path: [Field; 3], 
+    root: <span class="pub">pub</span> Field
+) {
+    <span class="kw">let</span> my_leaf = std::hash::pedersen_hash([identity_secret]);
+    <span class="kw">let</span> root = std::merkle::compute_merkle_root(my_leaf, merkle_index, hash_path);
+    assert(root == root);
 }</pre>
+        <div style="margin-top: 20px; font-size: 0.85rem; color: var(--muted); line-height: 1.5;">
+          <p><strong>Advanced Use Case: Anonymous Whitelist</strong></p>
+          <p>This proves you are a VIP member in a list of 8 people without revealing which one you are.</p>
+        </div>
       </div>
 
       <div class="panel">
-        <h2 class="panel-title">Prove Equality</h2>
+        <h2 class="panel-title">VIP Membership Check</h2>
         <form id="proofForm">
           <div class="field">
-            <label>x <span class="badge-private">private</span></label>
-            <input type="text" id="x" placeholder="e.g. 42" autocomplete="off" required />
-            <span class="hint">Known only to you, never revealed in the proof.</span>
+            <label>Secret Invite Code <span class="badge-private">private</span></label>
+            <input type="password" id="secret" placeholder="Enter your secret code..." required />
+            <span class="hint">The server will automatically verify if you are on the list without revealing your code.</span>
           </div>
-          <div class="field">
-            <label>y <span class="badge-public">public</span></label>
-            <input type="text" id="y" placeholder="e.g. 42" autocomplete="off" required />
-            <span class="hint">Public value that must match x.</span>
+          <button type="submit" id="btn">Generate membership proof</button>
+          
+          <div style="margin-top: 15px; font-size: 0.8rem; color: var(--muted); text-align: center;">
+            Try the test code: <code style="color: var(--accent); background: rgba(0,0,0,0.3); padding: 2px 5px; border-radius: 4px;">123</code>
           </div>
-          <button type="submit" id="btn">Generate and Verify Proof</button>
         </form>
         <div id="result"></div>
       </div>
@@ -350,18 +362,20 @@
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const x = document.getElementById("x").value.trim();
-      const y = document.getElementById("y").value.trim();
+      
+      const payload = {
+        secret: document.getElementById("secret").value.trim()
+      };
 
       btn.disabled = true;
-      btn.innerHTML = '<span class="spinner"></span>Running proof...';
+      btn.innerHTML = '<span class="spinner"></span>Running ZK-Proof...';
       out.innerHTML = "";
 
       try {
         const res = await fetch("/prove", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ x, y }),
+          body: JSON.stringify(payload),
         });
         const data = await res.json();
         renderResult(data);
@@ -369,7 +383,7 @@
         out.innerHTML = `<div class="verdict failure">Server error: ${err.message}</div>`;
       } finally {
         btn.disabled = false;
-        btn.textContent = "Generate & Verify Proof";
+        btn.textContent = "Generate membership proof";
       }
     });
 
@@ -384,8 +398,8 @@
       `).join("");
 
       const verdictHtml = data.success
-        ? `<div class="verdict success">✓ &nbsp; Proof valid — x equals y without revealing x</div>`
-        : `<div class="verdict failure">✗ &nbsp; Proof failed — constraint not satisfied</div>`;
+        ? `<div class="verdict success">✓ &nbsp; Proof valid — Membership confirmed without revealing identity</div>`
+        : `<div class="verdict failure">✗ &nbsp; Proof failed — Invalid membership path or root</div>`;
 
       out.innerHTML = `<div class="steps">${stepsHtml}</div>${verdictHtml}`;
     }
