@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Simple Circuit — ZK Proof Demo</title>
+  <title>Credential Proof — ZK Verify</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
@@ -89,6 +89,13 @@
       grid-template-columns: 1fr;
     }
 
+    @media (min-width: 900px) {
+      .grid {
+        grid-template-columns: 1.1fr 1fr;
+        align-items: start;
+      }
+    }
+
     .panel {
       background: linear-gradient(148deg, rgba(9, 21, 28, 0.92), var(--panel));
       border: 1px solid var(--line);
@@ -121,7 +128,34 @@
     .circuit-box pre .kw  { color: #7fd6f3; }
     .circuit-box pre .fn  { color: #ffc178; }
     .circuit-box pre .pub { color: #a8f0d1; }
-    .circuit-box pre .str { color: #ff9790; }
+
+    .valid-list {
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(141, 201, 219, 0.2);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 16px;
+    }
+
+    .valid-list-title {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+    }
+
+    .credential-item {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--accent-2);
+      padding: 4px 0;
+    }
+
+    .credential-item::before {
+      content: "→ ";
+      color: var(--muted);
+    }
 
     #proofForm {
       display: flex;
@@ -155,7 +189,7 @@
     .badge-private { background: rgba(90, 210, 244, 0.13); color: #8ee5ff; }
     .badge-public  { background: rgba(244, 162, 89, 0.15); color: #ffc58f; }
 
-    .field input {
+    .field input, .field select {
       border: 1px solid rgba(141, 201, 219, 0.3);
       border-radius: 10px;
       background: rgba(4, 13, 19, 0.7);
@@ -167,7 +201,11 @@
       transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
     }
 
-    .field input:focus {
+    .field select {
+      cursor: pointer;
+    }
+
+    .field input:focus, .field select:focus {
       border-color: var(--accent-2);
       box-shadow: 0 0 0 3px rgba(90, 210, 244, 0.18);
       transform: translateY(-1px);
@@ -278,6 +316,20 @@
       margin-right: 8px;
     }
 
+    .info-box {
+      background: rgba(90, 210, 244, 0.08);
+      border: 1px solid rgba(90, 210, 244, 0.2);
+      border-radius: 10px;
+      padding: 12px;
+      margin-top: 14px;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .info-box strong {
+      color: var(--accent-2);
+    }
+
     footer {
       margin-top: 20px;
       text-align: center;
@@ -292,66 +344,102 @@
       from { opacity: 0; transform: translateY(8px); }
       to { opacity: 1; transform: translateY(0); }
     }
-
-    @media (min-width: 900px) {
-      .grid {
-        grid-template-columns: 1.1fr 1fr;
-        align-items: start;
-      }
-
-      #result {
-        margin-top: 0;
-      }
-    }
   </style>
 </head>
 <body>
 
   <main class="app">
     <header class="hero">
-      <h1><span class="tag">Circuit Check</span> Zero-Knowledge Proof Playground</h1>
-      <p>Noir + Barretenberg · simple_circuit</p>
+      <h1><span class="tag">Credential Proof</span> Zero-Knowledge Verification</h1>
+      <p>Prove you have a valid credential without revealing which one</p>
     </header>
 
     <section class="grid">
-      <div class="panel circuit-box">
-        <h2 class="panel-title">Circuit</h2>
-        <pre><span class="kw">fn</span> <span class="fn">main</span>(x: Field, y: <span class="pub">pub</span> Field) {
-    assert(x == y);
+      <div class="panel">
+        <h2 class="panel-title">Valid Credentials</h2>
+        <div class="valid-list">
+          <div class="valid-list-title">Approved Credentials</div>
+          <div id="validCredentialsList">Loading...</div>
+        </div>
+        <div class="panel circuit-box">
+          <h2 class="panel-title">Circuit Logic</h2>
+          <pre><span class="kw">fn</span> <span class="fn">main</span>(
+    <span class="pub">private</span> credential: Field,
+    <span class="pub">pub</span> valid_credentials: [Field; 5]
+) {
+    assert(credential <span class="kw">in</span> valid_credentials);
 }</pre>
+        </div>
       </div>
 
       <div class="panel">
-        <h2 class="panel-title">Prove Equality</h2>
+        <h2 class="panel-title">Prove Credential Ownership</h2>
         <form id="proofForm">
           <div class="field">
-            <label>x <span class="badge-private">private</span></label>
-            <input type="text" id="x" placeholder="e.g. 42" autocomplete="off" required />
-            <span class="hint">Known only to you, never revealed in the proof.</span>
+            <label>Select Your Credential <span class="badge-private">private</span></label>
+            <select id="credential" required>
+              <option value="">Choose your credential...</option>
+            </select>
+            <span class="hint">This selection is never sent to the server. Your credential proves membership without revealing which one.</span>
           </div>
-          <div class="field">
-            <label>y <span class="badge-public">public</span></label>
-            <input type="text" id="y" placeholder="e.g. 42" autocomplete="off" required />
-            <span class="hint">Public value that must match x.</span>
-          </div>
-          <button type="submit" id="btn">Generate and Verify Proof</button>
+          <button type="submit" id="btn">Generate & Verify Proof</button>
         </form>
         <div id="result"></div>
+        <div class="info-box">
+          <strong>How it works:</strong> You prove that your credential hash matches one of the valid credentials, without revealing which specific credential you hold.
+        </div>
       </div>
     </section>
 
-    <footer>simple-circuit · khushii · Noir ZK</footer>
+    <footer>credential-proof · zk-verify · Noir ZK</footer>
   </main>
 
   <script>
     const form = document.getElementById("proofForm");
     const btn  = document.getElementById("btn");
     const out  = document.getElementById("result");
+    const credSelect = document.getElementById("credential");
+    const validList = document.getElementById("validCredentialsList");
+
+    async function loadValidCredentials() {
+      try {
+        const res = await fetch("/valid_credentials");
+        const data = await res.json();
+        
+        validList.innerHTML = data.valid_credentials.map(c => 
+          `<div class="credential-item">${c}</div>`
+        ).join("");
+        
+      } catch (err) {
+        validList.innerHTML = '<div style="color: var(--danger);">Failed to load credentials</div>';
+      }
+    }
+
+    loadValidCredentials();
+
+    const DEMO_CREDENTIALS = {
+      "Stanford CS Degree": 184769969321175,
+      "MIT Physics Degree": 184769969321176,
+      "Berkeley EE Degree": 184769969321177,
+      "Caltech Math Degree": 184769969321178,
+      "Harvard Business Degree": 184769969321179
+    };
+
+    for (const [name, value] of Object.entries(DEMO_CREDENTIALS)) {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = name;
+      credSelect.appendChild(option);
+    }
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const x = document.getElementById("x").value.trim();
-      const y = document.getElementById("y").value.trim();
+      const credential = parseInt(credSelect.value);
+
+      if (!credential) {
+        out.innerHTML = `<div class="verdict failure">Please select a credential</div>`;
+        return;
+      }
 
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner"></span>Running proof...';
@@ -361,7 +449,10 @@
         const res = await fetch("/prove", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ x, y }),
+          body: JSON.stringify({ 
+            credential,
+            valid_credentials: Object.values(DEMO_CREDENTIALS)
+          }),
         });
         const data = await res.json();
         renderResult(data);
@@ -384,8 +475,8 @@
       `).join("");
 
       const verdictHtml = data.success
-        ? `<div class="verdict success">✓ &nbsp; Proof valid — x equals y without revealing x</div>`
-        : `<div class="verdict failure">✗ &nbsp; Proof failed — constraint not satisfied</div>`;
+        ? `<div class="verdict success">✓ &nbsp; Proof valid — you have a valid credential without revealing which one</div>`
+        : `<div class="verdict failure">✗ &nbsp; Proof failed — credential not in valid list</div>`;
 
       out.innerHTML = `<div class="steps">${stepsHtml}</div>${verdictHtml}`;
     }
