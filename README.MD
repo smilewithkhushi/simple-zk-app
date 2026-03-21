@@ -205,24 +205,60 @@ compiler_version = "0.21.0"
 
 ### `Prover.toml` - Test Inputs
 ```toml
-x = "1"
-y = "2"
+lat = "37"
+lon = "-122"
+north = "38"
+west = "-123"
+south = "36"
+east = "-121"
 ```
 
-- **Private Inputs**: Values for `x`, `z`, etc.
-- **Public Inputs**: Values for `pub` parameters
+- **Private Inputs**: `lat`, `lon` (user's location, taken from browser)
+- **Public Inputs**: `north`, `west`, `south`, `east` (bounding box)
 - Updated after each `nargo execute`
 
 ### `src/main.nr` - Circuit Code
 ```noir
-fn main(x: Field, y: pub Field) {
-    assert(x != y);
+fn main(lat: Field, lon: Field, north: pub Field, west: pub Field, south: pub Field, east: pub Field) {
+    assert(lat >= south);
+    assert(lat <= north);
+    assert(lon >= west);
+    assert(lon <= east);
 }
 ```
 
-- **Entry Point**: Main circuit logic
-- **Functions**: Define circuit behavior
-- **Tests**: Validate circuit logic
+- **Entry Point**: Main circuit logic for bounding box verification
+- **Tests**: Validate in-bound and out-of-bound cases
+---
+
+## 🌍 Geographical Location Verification Usage
+
+### How to Use
+
+1. **Start the server:**
+     ```bash
+     node server.js
+     # Open http://localhost:3000
+     ```
+2. **Allow browser geolocation** when prompted. Your coordinates are used privately for the proof.
+3. **No need to enter any boundaries!** The bounding box is fixed to cover all of India:
+     - North: 37.1
+     - West: 68.1
+     - South: 6.5
+     - East: 97.4
+4. **Click 'Generate and Verify Proof'**. The app will:
+     - Use your browser location as private input
+     - Prove (without revealing your location) that you are inside India
+     - Show proof result and steps
+
+#### Test Cases
+
+- **Valid:**
+    - User at (17.4, 78.3) (Hyderabad, India) → Proof valid
+- **Invalid:**
+    - User at (40, -125) (outside India) → Proof fails
+
+---
 
 ---
 

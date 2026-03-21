@@ -12,7 +12,7 @@ function updateProverToml(x, y) {
 }
 
 function runProof(x, y) {
-  updateProverToml(x, y);
+  updateProverToml(lat, lon, north, west, south, east);
 
   const steps = [];
 
@@ -57,20 +57,20 @@ const server = http.createServer((req, res) => {
     let body = "";
     req.on("data", (chunk) => (body += chunk));
     req.on("end", () => {
-      let x, y;
+      let lat, lon, north, west, south, east;
       try {
-        ({ x, y } = JSON.parse(body));
+        ({ lat, lon, north, west, south, east } = JSON.parse(body));
       } catch {
         res.writeHead(400, { "Content-Type": "application/json" });
         return res.end(JSON.stringify({ error: "Invalid JSON" }));
       }
 
-      if (!x || !y) {
+      if ([lat, lon, north, west, south, east].some(v => v === undefined || v === null || v === "")) {
         res.writeHead(400, { "Content-Type": "application/json" });
-        return res.end(JSON.stringify({ error: "x and y are required" }));
+        return res.end(JSON.stringify({ error: "All inputs are required" }));
       }
 
-      const result = runProof(x, y);
+      const result = runProof(lat, lon, north, west, south, east);
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify(result));
     });
