@@ -309,32 +309,32 @@
 
   <main class="app">
     <header class="hero">
-      <h1><span class="tag">Circuit Check</span> Zero-Knowledge Proof Playground</h1>
-      <p>Noir + Barretenberg · simple_circuit</p>
+      <h1><span class="tag">Age Gate</span> Zero-Knowledge Age Verification</h1>
+      <p>Noir + Barretenberg · Prove you're 18+ without revealing your age</p>
     </header>
 
     <section class="grid">
       <div class="panel circuit-box">
         <h2 class="panel-title">Circuit</h2>
-        <pre><span class="kw">fn</span> <span class="fn">main</span>(x: Field, y: <span class="pub">pub</span> Field) {
-    assert(x == y);
+        <pre><span class="kw">fn</span> <span class="fn">main</span>(age: u8, min_age: <span class="pub">pub</span> u8) {
+    assert(age >= min_age);
 }</pre>
       </div>
 
       <div class="panel">
-        <h2 class="panel-title">Prove Equality</h2>
+        <h2 class="panel-title">Verify Age</h2>
         <form id="proofForm">
           <div class="field">
-            <label>x <span class="badge-private">private</span></label>
-            <input type="text" id="x" placeholder="e.g. 42" autocomplete="off" required />
-            <span class="hint">Known only to you, never revealed in the proof.</span>
+            <label>Age <span class="badge-private">private</span></label>
+            <input type="number" id="age" placeholder="e.g. 21" min="0" max="255" autocomplete="off" required />
+            <span class="hint">Your real age — kept secret, never revealed in the proof.</span>
           </div>
           <div class="field">
-            <label>y <span class="badge-public">public</span></label>
-            <input type="text" id="y" placeholder="e.g. 42" autocomplete="off" required />
-            <span class="hint">Public value that must match x.</span>
+            <label>Minimum Age <span class="badge-public">public</span></label>
+            <input type="number" id="min_age" placeholder="18" value="18" min="0" max="255" autocomplete="off" required />
+            <span class="hint">Public threshold — the age requirement to verify against.</span>
           </div>
-          <button type="submit" id="btn">Generate and Verify Proof</button>
+          <button type="submit" id="btn">Verify Age with ZK Proof</button>
         </form>
         <div id="result"></div>
       </div>
@@ -350,8 +350,8 @@
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const x = document.getElementById("x").value.trim();
-      const y = document.getElementById("y").value.trim();
+      const age = document.getElementById("age").value.trim();
+      const min_age = document.getElementById("min_age").value.trim();
 
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner"></span>Running proof...';
@@ -361,7 +361,7 @@
         const res = await fetch("/prove", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ x, y }),
+          body: JSON.stringify({ age, min_age }),
         });
         const data = await res.json();
         renderResult(data);
@@ -369,7 +369,7 @@
         out.innerHTML = `<div class="verdict failure">Server error: ${err.message}</div>`;
       } finally {
         btn.disabled = false;
-        btn.textContent = "Generate & Verify Proof";
+        btn.textContent = "Verify Age with ZK Proof";
       }
     });
 
@@ -384,8 +384,8 @@
       `).join("");
 
       const verdictHtml = data.success
-        ? `<div class="verdict success">✓ &nbsp; Proof valid — x equals y without revealing x</div>`
-        : `<div class="verdict failure">✗ &nbsp; Proof failed — constraint not satisfied</div>`;
+        ? `<div class="verdict success">✓ &nbsp; Access granted — student is 18+ (age not revealed)</div>`
+        : `<div class="verdict failure">✗ &nbsp; Access denied — student does not meet the age requirement</div>`;
 
       out.innerHTML = `<div class="steps">${stepsHtml}</div>${verdictHtml}`;
     }
