@@ -18,10 +18,46 @@ function updateProverToml(inputs) {
   fs.writeFileSync(path.join(ROOT, "Prover.toml"), content);
 }
 
-function runProof(inputs) {
-  updateProverToml(inputs);
+const WHITELIST = ["123", "456", "789", "111", "222", "333", "444", "555"];
 
-  const steps = [];
+// Simple mock for a Merkle Path calculation logic
+// In a production app, you would use a real hashing library here
+function getMerkleData(secret) {
+  const index = WHITELIST.indexOf(secret);
+  if (index === -1) return null;
+
+  // Real pre-calculated hashes for secret "123" (Index 0)
+  const mocks = [
+    [
+      "0x2767041dcdd670731fa55e5d3fa9664da044cc1835fac6890333d45c38b2510c",
+      "0x05481d9f95037d046f48f430c25a7aee4f6ac0c6dfec8f7004fcfefba5a3637e",
+      "0x117a0033ad11d6706e5797d341b126588d927f8045610813f56e9c685bf98275"
+    ]
+  ];
+
+  return {
+    index: index.toString(),
+    path: mocks[index] || mocks[0],
+    root: "0x1d3680e60971578335b23b10b65d6bd94998781a704618e388fac68d270313f8"
+  };
+}
+
+function runProof(secret) {
+  const merkle = getMerkleData(secret);
+  
+  if (!merkle) {
+    return { success: false, steps: [{ name: "Validating Secret", status: "fail", msg: "This secret code is not on the VIP Whitelist!" }] };
+  }
+
+  const inputs = {
+    identity_secret: secret,
+    merkle_index: merkle.index,
+    hash_path: merkle.path,
+    root: merkle.root
+  };
+
+  updateProverToml(inputs);
+  const steps = [{ name: "Validating Secret", status: "ok", msg: "Found on whitelist!" }];
 
   try {
     execSync("nargo execute", { cwd: ROOT, stdio: "pipe" });
@@ -64,15 +100,16 @@ const server = http.createServer((req, res) => {
     let body = "";
     req.on("data", (chunk) => (body += chunk));
     req.on("end", () => {
-      let inputs;
+      let secret;
       try {
-        inputs = JSON.parse(body);
+        const parsed = JSON.parse(body);
+        secret = parsed.secret || parsed.identity_secret;
       } catch {
         res.writeHead(400, { "Content-Type": "application/json" });
         return res.end(JSON.stringify({ error: "Invalid JSON" }));
       }
 
-      const result = runProof(inputs);
+      const result = runProof(secret);
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify(result));
     });

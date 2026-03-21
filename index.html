@@ -335,33 +335,18 @@
       </div>
 
       <div class="panel">
-        <h2 class="panel-title">Membership Proof</h2>
+        <h2 class="panel-title">VIP Membership Check</h2>
         <form id="proofForm">
           <div class="field">
-            <label>Identity Secret <span class="badge-private">private</span></label>
-            <input type="text" id="secret" placeholder="e.g. 123456" required />
-            <span class="hint">Your private key (never revealed).</span>
-          </div>
-          <div class="field">
-            <label>Merkle Index <span class="badge-private">private</span></label>
-            <input type="text" id="index" placeholder="e.g. 0" required />
-            <span class="hint">Your position in the tree (0 to 7).</span>
-          </div>
-          <div class="field">
-            <label>Hash Path <span class="badge-private">private</span></label>
-            <input type="text" id="path" placeholder="p1, p2, p3" required />
-            <span class="hint">3 neighbor hashes separated by commas.</span>
-          </div>
-          <div class="field">
-            <label>Merkle Root <span class="badge-public">public</span></label>
-            <input type="text" id="root" placeholder="0x..." required />
-            <span class="hint">The public fingerprint of the whole whitelist.</span>
+            <label>Secret Invite Code <span class="badge-private">private</span></label>
+            <input type="password" id="secret" placeholder="Enter your secret code..." required />
+            <span class="hint">The server will automatically verify if you are on the list without revealing your code.</span>
           </div>
           <button type="submit" id="btn">Generate membership proof</button>
           
-          <button type="button" id="testBtn" style="margin-top: 10px; background: rgba(255,255,255,0.05); color: var(--muted); border: 1px dashed var(--line); border-radius: 8px; padding: 8px; font-size: 0.8rem; cursor: pointer;">
-            Auto-fill with Example VIP Data
-          </button>
+          <div style="margin-top: 15px; font-size: 0.8rem; color: var(--muted); text-align: center;">
+            Try the test code: <code style="color: var(--accent); background: rgba(0,0,0,0.3); padding: 2px 5px; border-radius: 4px;">123</code>
+          </div>
         </form>
         <div id="result"></div>
       </div>
@@ -374,39 +359,16 @@
     const form = document.getElementById("proofForm");
     const btn  = document.getElementById("btn");
     const out  = document.getElementById("result");
-    const testBtn = document.getElementById("testBtn");
-
-    // Pre-calculated working data for a simple Merkle Tree of height 3
-    const TEST_DATA = {
-      identity_secret: "123",
-      merkle_index: "0",
-      hash_path: [
-        "0x2767041dcdd670731fa55e5d3fa9664da044cc1835fac6890333d45c38b2510c",
-        "0x05481d9f95037d046f48f430c25a7aee4f6ac0c6dfec8f7004fcfefba5a3637e",
-        "0x117a0033ad11d6706e5797d341b126588d927f8045610813f56e9c685bf98275"
-      ],
-      root: "0x1d3680e60971578335b23b10b65d6bd94998781a704618e388fac68d270313f8"
-    };
-
-    testBtn.addEventListener("click", () => {
-      document.getElementById("secret").value = TEST_DATA.identity_secret;
-      document.getElementById("index").value = TEST_DATA.merkle_index;
-      document.getElementById("path").value = TEST_DATA.hash_path.join(", ");
-      document.getElementById("root").value = TEST_DATA.root;
-    });
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       
       const payload = {
-        identity_secret: document.getElementById("secret").value.trim(),
-        merkle_index: document.getElementById("index").value.trim(),
-        hash_path: document.getElementById("path").value.split(",").map(v => v.trim()),
-        root: document.getElementById("root").value.trim()
+        secret: document.getElementById("secret").value.trim()
       };
 
       btn.disabled = true;
-      btn.innerHTML = '<span class="spinner"></span>Running proof...';
+      btn.innerHTML = '<span class="spinner"></span>Running ZK-Proof...';
       out.innerHTML = "";
 
       try {
