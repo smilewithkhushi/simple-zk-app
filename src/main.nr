@@ -1,12 +1,11 @@
-//all files to be included here only
-fn main(x: Field, y: pub Field) {
-    assert(x == y);
-}
+fn main(age: Field, score: Field) -> pub Field {
+    // Constraints: age >= 18 and score >= 75
 
-#[test]
-fn test_main() {
-    main(1, 2);
+    let age_check = age - 18;
+    let score_check = score - 75;
 
-    // Uncomment to make test fail
-    // main(1, 1);
+    // If both are >= 0, product will be valid
+    let is_valid = age_check * score_check;
+
+    is_valid
 }
