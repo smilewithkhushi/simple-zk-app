@@ -1,12 +1,13 @@
-//all files to be included here only
-fn main(x: Field, y: pub Field) {
-    assert(x == y);
-}
+fn main(
+    secret_tx: Field,
+    pub_hash: pub Field,
+    expected_value: pub Field,
+    risk_flag: pub Field
+) {
+    let computed_hash = secret_tx * secret_tx;
+    assert(computed_hash == pub_hash);
 
-#[test]
-fn test_main() {
-    main(1, 2);
+    assert(secret_tx == expected_value);
 
-    // Uncomment to make test fail
-    // main(1, 1);
+    assert(risk_flag == 1);
 }
