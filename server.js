@@ -6,13 +6,13 @@ const { execSync } = require("child_process");
 const PORT = 3000;
 const ROOT = __dirname;
 
-function updateProverToml(x, y) {
-  const content = `x = "${x}"\ny = "${y}"\n`;
+function updateProverToml(age, min_age) {
+  const content = `age = "${age}"\nmin_age = "${min_age}"\n`;
   fs.writeFileSync(path.join(ROOT, "Prover.toml"), content);
 }
 
-function runProof(x, y) {
-  updateProverToml(x, y);
+function runProof(age, min_age) {
+  updateProverToml(age, min_age);
 
   const steps = [];
 
@@ -57,20 +57,20 @@ const server = http.createServer((req, res) => {
     let body = "";
     req.on("data", (chunk) => (body += chunk));
     req.on("end", () => {
-      let x, y;
+      let age, min_age;
       try {
-        ({ x, y } = JSON.parse(body));
+        ({ age, min_age } = JSON.parse(body));
       } catch {
         res.writeHead(400, { "Content-Type": "application/json" });
         return res.end(JSON.stringify({ error: "Invalid JSON" }));
       }
 
-      if (!x || !y) {
+      if (!age || !min_age) {
         res.writeHead(400, { "Content-Type": "application/json" });
-        return res.end(JSON.stringify({ error: "x and y are required" }));
+        return res.end(JSON.stringify({ error: "age and min_age are required" }));
       }
 
-      const result = runProof(x, y);
+      const result = runProof(age, min_age);
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify(result));
     });
