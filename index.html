@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Simple Circuit — ZK Proof Demo</title>
+  <title>No-Overdue-Loan — ZK Proof Demo</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
@@ -309,30 +309,40 @@
 
   <main class="app">
     <header class="hero">
-      <h1><span class="tag">Circuit Check</span> Zero-Knowledge Proof Playground</h1>
-      <p>Noir + Barretenberg · simple_circuit</p>
+      <h1><span class="tag">Loan Policy</span> Zero-Knowledge Attestation Playground</h1>
+      <p>Noir + Barretenberg · no-overdue-loan attestation</p>
     </header>
 
     <section class="grid">
       <div class="panel circuit-box">
         <h2 class="panel-title">Circuit</h2>
-        <pre><span class="kw">fn</span> <span class="fn">main</span>(x: Field, y: <span class="pub">pub</span> Field) {
-    assert(x == y);
+        <pre><span class="kw">fn</span> <span class="fn">main</span>(
+    total_loans: Field,
+    overdue_loans: Field,
+    max_overdue_allowed: <span class="pub">pub</span> Field
+) {
+    assert(overdue_loans &lt;= max_overdue_allowed);
+    assert(overdue_loans &lt;= total_loans);
 }</pre>
       </div>
 
       <div class="panel">
-        <h2 class="panel-title">Prove Equality</h2>
+        <h2 class="panel-title">Prove Policy Compliance</h2>
         <form id="proofForm">
           <div class="field">
-            <label>x <span class="badge-private">private</span></label>
-            <input type="text" id="x" placeholder="e.g. 42" autocomplete="off" required />
-            <span class="hint">Known only to you, never revealed in the proof.</span>
+            <label>total_loans <span class="badge-private">private</span></label>
+            <input type="text" id="total_loans" placeholder="e.g. 120" autocomplete="off" required />
+            <span class="hint">Internal aggregate count; remains hidden from verifier.</span>
           </div>
           <div class="field">
-            <label>y <span class="badge-public">public</span></label>
-            <input type="text" id="y" placeholder="e.g. 42" autocomplete="off" required />
-            <span class="hint">Public value that must match x.</span>
+            <label>overdue_loans <span class="badge-private">private</span></label>
+            <input type="text" id="overdue_loans" placeholder="e.g. 3" autocomplete="off" required />
+            <span class="hint">Private summary metric proven to satisfy the policy.</span>
+          </div>
+          <div class="field">
+            <label>max_overdue_allowed <span class="badge-public">public</span></label>
+            <input type="text" id="max_overdue_allowed" placeholder="e.g. 5" autocomplete="off" required />
+            <span class="hint">Public policy threshold verified on-chain/off-chain.</span>
           </div>
           <button type="submit" id="btn">Generate and Verify Proof</button>
         </form>
@@ -340,7 +350,7 @@
       </div>
     </section>
 
-    <footer>simple-circuit · khushii · Noir ZK</footer>
+    <footer>simple-circuit · no-overdue-loan · Noir ZK</footer>
   </main>
 
   <script>
@@ -350,8 +360,9 @@
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const x = document.getElementById("x").value.trim();
-      const y = document.getElementById("y").value.trim();
+      const total_loans = document.getElementById("total_loans").value.trim();
+      const overdue_loans = document.getElementById("overdue_loans").value.trim();
+      const max_overdue_allowed = document.getElementById("max_overdue_allowed").value.trim();
 
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner"></span>Running proof...';
@@ -361,7 +372,7 @@
         const res = await fetch("/prove", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ x, y }),
+          body: JSON.stringify({ total_loans, overdue_loans, max_overdue_allowed }),
         });
         const data = await res.json();
         renderResult(data);
@@ -384,8 +395,8 @@
       `).join("");
 
       const verdictHtml = data.success
-        ? `<div class="verdict success">✓ &nbsp; Proof valid — x equals y without revealing x</div>`
-        : `<div class="verdict failure">✗ &nbsp; Proof failed — constraint not satisfied</div>`;
+        ? `<div class="verdict success">✓ &nbsp; Proof valid — overdue loans are within policy limit</div>`
+        : `<div class="verdict failure">✗ &nbsp; Proof failed — overdue loans exceed allowed policy</div>`;
 
       out.innerHTML = `<div class="steps">${stepsHtml}</div>${verdictHtml}`;
     }
