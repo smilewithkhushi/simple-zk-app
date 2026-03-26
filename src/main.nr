@@ -1,4 +1,6 @@
 //all files to be included here only
+fn main(x: Field, y: pub Field) {
+    assert(x >= y);
 fn main(x: u8, y: pub u8) {
     assert(x == y);
 }
