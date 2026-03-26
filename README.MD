@@ -1,13 +1,13 @@
 # Simple Circuit: Your First Zero Knowledge Proof Project
 
-This is your first project using **Noir** for generating zero knowledge proofs! 
+This is your first project using **Noir** for generating zero knowledge **proofs**! 
 
 ---
 
 ## 📋 Project Overview
 
 This project demonstrates a complete workflow for building, compiling, and verifying zero knowledge circuits using Noir. It serves as both a learning resource and a practical example for beginners.
-
+****
 ### Key Technologies
 - **Language**: Noir (`.nr` file extension)
 - **Proving Backend**: Barretenberg
