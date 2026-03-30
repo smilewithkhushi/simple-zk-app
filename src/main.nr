@@ -1,5 +1,5 @@
 //all files to be included here only
-fn main(x: u8, y: pub u8) {
+fn main(x:u8, y: pub u8) {
     assert(x == y);
 }
 
